@@ -1,84 +1,93 @@
 from tkinter import *
-import math
-# ---------------------------- CONSTANTS ------------------------------- #
-PINK = "#FFE2E2"
-RED = "#e7305b"
-GREEN = "#9bdeac"
-YELLOW = "#f7f5dd"
-BLUE = "#16325B"
-NAVY = "#213555"
+import random
+import csv
+from tkinter import messagebox
+
+# from fontTools.ttLib.tables.otConverters import converterMapping
+
 FONT_NAME = "Courier"
-WORK_MIN = 25
-SHORT_BREAK_MIN = 5
-LONG_BREAK_MIN = 20
-reps =0
-timer = None
-# ---------------------------- TIMER RESET ------------------------------- # 
-def reset_timer():
-    window.after_cancel(timer)
-    canvas.itemconfig(timer_text,text = "00:00")
-    timer_title.config(text = "Timer")
-    check_marks.config(text= "")
-    global reps
-    reps =0
-# ---------------------------- TIMER MECHANISM ------------------------------- # 
-def start_timer():
-    global reps
-    reps += 1
-    work_sec = WORK_MIN * 60
-    short_break_sec = SHORT_BREAK_MIN *60
-    long_break_sec = LONG_BREAK_MIN
-    # if it's the 1st/3rd/5th/7th rep:
-    if reps  %  8 ==0:
-        timer_title.config(text="BREAK", fg=GREEN, bg=PINK, font=(FONT_NAME, 30, "bold"))
-        count_down(long_break_sec)
-    # if it's the 8th rep
-    elif reps % 2==0:
-        timer_title.config(text = "BREAK",fg = RED, bg=PINK ,font = (FONT_NAME,30,"bold"))
-        count_down(short_break_sec)
-    #if it's 2nd/4th/6th rep:
-    else:
-        timer_title.config(text="WORK", fg=NAVY, bg=PINK, font=(FONT_NAME, 30, "bold"))
-        count_down(work_sec)
-# ---------------------------- COUNTDOWN MECHANISM ------------------------------- # 
-def count_down(count):
-    count_minutes = math.floor(count / 60)
-    count_sec = count % 60
-    if count_sec <10:
-        count_sec = f"0{count_sec}"
-    canvas.itemconfig(timer_text, text = f"{count_minutes}:{count_sec}")
-    if count >0:
-        global  timer
-        timer =window.after(1000, count_down,count-1)
-    else:
-        start_timer()
-        marks =""
-        work_sesstions = math.floor(reps/2)
-        for _ in range(work_sesstions):
-            marks ="✓"
-            check_marks.config(text = marks)
+# ---------------------------- PASSWORD GENERATOR ------------------------------- #
+def password_generator():
+    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    symbols = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
 
-# ---------------------------- UI SETUP --------------- ---------------- #
+    nr_letters = random.randint(8, 10)
+    nr_symbols = random.randint(2, 4)
+    nr_numbers = random.randint(2, 4)
+
+    password_list = []
+    password_letter = [random.choice(letters) for _ in range(nr_letters)]
+    password_list.extend(password_letter)
+    password_symbols = [random.choice(symbols)for _ in range(nr_symbols)]
+    password_list.extend(password_symbols)
+    password_numbers =[random.choice(numbers)for _ in range(nr_numbers)]
+    password_list.extend(password_numbers)
+    random.shuffle(password_list)
+    password = "".join(password_list)
+    password_entry.insert(0,password)
+# ---------------------------- SAVE PASSWORD ------------------------------- #
+def save_to_csv():
+    website = website_entry.get()
+    email = email_entry.get()
+    password = password_entry.get()
+
+    # Check if any field is empty
+    if not website or not email or not password:
+        messagebox.showwarning("Warning", "Please fill out all fields")
+        return
+
+    # Save data to a csv file
+    with open("data.csv",mode="a" ,newline = "") as file:
+        writer = csv.writer((file))
+        writer.writerow([website,email,password])
+
+    #clear entries
+    website_entry.delete(0, END)
+    password_entry.delete(0,END)
+
+    #Success message
+    messagebox.showinfo("Sucess","Details saved successfully")
+
+
+
+# ---------------------------- UI SETUP ------------------------------- #
 window = Tk()
-window.title("Pomodoro")
-window.config(padx=100, pady =100,bg =PINK)
-# Timer
-timer_title = Label(text = "TIMER",fg = GREEN, bg=PINK ,font = (FONT_NAME,30,"bold"))
-timer_title.grid(column = 1, row = 0)
+window.title("Password Manager")
+window.config(padx= 20,pady =20)
 
-# Canvas
-tomato_img = PhotoImage(file = "tomato.png")
-canvas = Canvas(width =200,height = 224,bg = PINK, highlightthickness= 0)
-canvas.create_image(100,112, image = tomato_img)
-timer_text = canvas.create_text(100,130, text = "00:00",fill = "white",font = (FONT_NAME, 50,"bold"))
-canvas.grid(column =1, row =1)
+#Create Image
+logo_img = PhotoImage(file = "logo.png")
+canvas = Canvas(width= 200 ,height=200,highlightthickness=0)
+canvas.create_image(100,100, image = logo_img)
+canvas.grid(column =1, row =0)
 
-start_button =Button(text = "start",command= start_timer,  highlightthickness= 0,  font=(FONT_NAME,12,"bold"))
-start_button.grid(column = 0, row =3)
+# Create Website Label
+website = Label(text ="Website:",font=(FONT_NAME,12))
+website.grid(column = 0 , row = 1)
+# Website Entry
+website_entry = Entry(width=35)
+website_entry.grid(column = 1, row =1,columnspan =2)
 
-reset_button = Button(text = "reset",command= reset_timer,highlightthickness= 0 ,font=(FONT_NAME,12,"bold"))
-reset_button.grid(column =3, row = 3)
+#Create Email/Username Label
+email = Label(text = "Email/Username:",font=(FONT_NAME,12))
+email.grid(column = 0, row = 2)
+#Email Entry
+email_entry = Entry(width=35)
+email_entry.grid(column = 1, row = 2,columnspan =2)
+email_entry.insert(0,"abc@gmail.com")
 
-check_marks = Label(text = "✓", fg= GREEN ,bg = PINK, font=30)
-check_marks.grid(column = 1, row =4)
+# Create Password Label
+password = Label(text ="Password:", font=(FONT_NAME,12))
+password.grid(column = 0, row = 3)
+# Password Entry
+password_entry = Entry(width=20)
+password_entry.grid(column =1 , row =3,columnspan =1)
+# Generate password button
+generate_password = Button(text="Generate Password",command= password_generator)
+generate_password.grid(column= 2, row =3)
+# Add button
+add_button = Button(text = "Add",width=36,command= save_to_csv)
+add_button.grid(column = 1, row = 4,columnspan =2)
+
 window.mainloop()
